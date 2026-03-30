@@ -37,6 +37,7 @@ Use `BorderlessTitleBarScaffold` inside a `FrameWindowScope` — three steps:
 
 ```kotlin
 import cn.longzhengyi.windowsdecoration.*
+import cn.longzhengyi.windowsdecoration.windowhelper.*
 
 @Composable
 fun FrameWindowScope.MyTitleBar(windowState: WindowState, onClose: () -> Unit) {

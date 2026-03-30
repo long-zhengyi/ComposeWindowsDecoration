@@ -37,6 +37,7 @@ dependencies {
 
 ```kotlin
 import cn.longzhengyi.windowsdecoration.*
+import cn.longzhengyi.windowsdecoration.windowhelper.*
 
 @Composable
 fun FrameWindowScope.MyTitleBar(windowState: WindowState, onClose: () -> Unit) {

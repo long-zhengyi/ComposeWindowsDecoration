@@ -1,4 +1,4 @@
-package cn.longzhengyi.windowsdecoration.utils
+package cn.longzhengyi.windowsdecoration.windowhelper.utils
 
 import java.util.concurrent.atomic.AtomicInteger
 

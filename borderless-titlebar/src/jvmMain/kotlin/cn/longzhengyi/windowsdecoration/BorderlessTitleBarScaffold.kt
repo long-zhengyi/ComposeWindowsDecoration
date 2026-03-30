@@ -3,15 +3,16 @@ package cn.longzhengyi.windowsdecoration
 import androidx.compose.runtime.*
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowState
+import cn.longzhengyi.windowsdecoration.windowhelper.rememberBorderlessWindowHelper
 import kotlinx.coroutines.delay
 
 /**
  * 无边框标题栏脚手架。
  *
- * 自动安装 [BorderlessWindowHelper] 并追踪最大化状态，不预设任何布局。
+ * 自动安装 [cn.longzhengyi.windowsdecoration.windowhelper.BorderlessWindowHelper] 并追踪最大化状态，不预设任何布局。
  * 调用方在 [content] 中自由组织布局并通过 [TitleBarScope] 访问窗口操作和 [helper][TitleBarScope.helper]。
  *
- * **注意**：[content] 中必须手动标记 [windowDragArea]，
+ * **注意**：[content] 中必须手动标记 [cn.longzhengyi.windowsdecoration.windowhelper.windowDragArea]，
  * 否则窗口不可拖拽。
  *
  * ```kotlin

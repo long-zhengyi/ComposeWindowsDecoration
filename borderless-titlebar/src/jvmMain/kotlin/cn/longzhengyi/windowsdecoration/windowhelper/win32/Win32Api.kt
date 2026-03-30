@@ -1,4 +1,4 @@
-package cn.longzhengyi.windowsdecoration.win32
+package cn.longzhengyi.windowsdecoration.windowhelper.win32
 
 import com.sun.jna.Native
 import com.sun.jna.Pointer

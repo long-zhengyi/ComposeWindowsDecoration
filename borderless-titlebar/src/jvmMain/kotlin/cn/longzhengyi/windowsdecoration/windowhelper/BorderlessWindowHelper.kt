@@ -1,56 +1,56 @@
-package cn.longzhengyi.windowsdecoration
+package cn.longzhengyi.windowsdecoration.windowhelper
 
 import androidx.compose.ui.geometry.Rect
 import com.sun.jna.*
 import com.sun.jna.platform.win32.BaseTSD.LONG_PTR
 import com.sun.jna.platform.win32.WinDef.*
-import cn.longzhengyi.windowsdecoration.skialayer.SkiaLayerWindowProcedure
-import cn.longzhengyi.windowsdecoration.win32.DWMWA_WINDOW_CORNER_PREFERENCE
-import cn.longzhengyi.windowsdecoration.win32.DWMWCP_ROUND
-import cn.longzhengyi.windowsdecoration.win32.DwmApi
-import cn.longzhengyi.windowsdecoration.win32.GWL_STYLE
-import cn.longzhengyi.windowsdecoration.win32.GWL_WNDPROC
-import cn.longzhengyi.windowsdecoration.win32.HTBOTTOM
-import cn.longzhengyi.windowsdecoration.win32.HTBOTTOMLEFT
-import cn.longzhengyi.windowsdecoration.win32.HTBOTTOMRIGHT
-import cn.longzhengyi.windowsdecoration.win32.HTCAPTION
-import cn.longzhengyi.windowsdecoration.win32.HTCLIENT
-import cn.longzhengyi.windowsdecoration.win32.HTCLOSE
-import cn.longzhengyi.windowsdecoration.win32.HTLEFT
-import cn.longzhengyi.windowsdecoration.win32.HTMAXBUTTON
-import cn.longzhengyi.windowsdecoration.win32.HTMINBUTTON
-import cn.longzhengyi.windowsdecoration.win32.HTRIGHT
-import cn.longzhengyi.windowsdecoration.win32.HTTOP
-import cn.longzhengyi.windowsdecoration.win32.HTTOPLEFT
-import cn.longzhengyi.windowsdecoration.win32.HTTOPRIGHT
-import cn.longzhengyi.windowsdecoration.win32.MARGINS
-import cn.longzhengyi.windowsdecoration.win32.MINMAXINFO
-import cn.longzhengyi.windowsdecoration.win32.MONITORINFO
-import cn.longzhengyi.windowsdecoration.win32.MONITOR_DEFAULTTONEAREST
-import cn.longzhengyi.windowsdecoration.win32.RECT
-import cn.longzhengyi.windowsdecoration.win32.SM_CXEDGE
-import cn.longzhengyi.windowsdecoration.win32.SM_CXFRAME
-import cn.longzhengyi.windowsdecoration.win32.SM_CXPADDEDBORDER
-import cn.longzhengyi.windowsdecoration.win32.SM_CYEDGE
-import cn.longzhengyi.windowsdecoration.win32.SM_CYFRAME
-import cn.longzhengyi.windowsdecoration.win32.SWP_FRAMECHANGED
-import cn.longzhengyi.windowsdecoration.win32.SWP_NOACTIVATE
-import cn.longzhengyi.windowsdecoration.win32.SWP_NOMOVE
-import cn.longzhengyi.windowsdecoration.win32.SWP_NOSIZE
-import cn.longzhengyi.windowsdecoration.win32.SWP_NOZORDER
-import cn.longzhengyi.windowsdecoration.win32.SW_MINIMIZE
-import cn.longzhengyi.windowsdecoration.win32.SW_RESTORE
-import cn.longzhengyi.windowsdecoration.win32.SW_SHOWMAXIMIZED
-import cn.longzhengyi.windowsdecoration.win32.User32Ex
-import cn.longzhengyi.windowsdecoration.win32.WM_GETMINMAXINFO
-import cn.longzhengyi.windowsdecoration.win32.WM_NCACTIVATE
-import cn.longzhengyi.windowsdecoration.win32.WM_NCCALCSIZE
-import cn.longzhengyi.windowsdecoration.win32.WM_NCHITTEST
-import cn.longzhengyi.windowsdecoration.win32.WM_NCMOUSEMOVE
-import cn.longzhengyi.windowsdecoration.win32.WM_SIZE
-import cn.longzhengyi.windowsdecoration.win32.WS_CAPTION
-import cn.longzhengyi.windowsdecoration.win32.WS_SYSMENU
-import cn.longzhengyi.windowsdecoration.win32.WndProcCallback
+import cn.longzhengyi.windowsdecoration.windowhelper.skialayer.SkiaLayerWindowProcedure
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.DWMWA_WINDOW_CORNER_PREFERENCE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.DWMWCP_ROUND
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.DwmApi
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.GWL_STYLE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.GWL_WNDPROC
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTBOTTOM
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTBOTTOMLEFT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTBOTTOMRIGHT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTCAPTION
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTCLIENT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTCLOSE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTLEFT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTMAXBUTTON
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTMINBUTTON
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTRIGHT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTTOP
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTTOPLEFT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTTOPRIGHT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.MARGINS
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.MINMAXINFO
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.MONITORINFO
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.MONITOR_DEFAULTTONEAREST
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.RECT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SM_CXEDGE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SM_CXFRAME
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SM_CXPADDEDBORDER
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SM_CYEDGE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SM_CYFRAME
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SWP_FRAMECHANGED
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SWP_NOACTIVATE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SWP_NOMOVE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SWP_NOSIZE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SWP_NOZORDER
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SW_MINIMIZE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SW_RESTORE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.SW_SHOWMAXIMIZED
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.User32Ex
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_GETMINMAXINFO
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCACTIVATE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCCALCSIZE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCHITTEST
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCMOUSEMOVE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_SIZE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WS_CAPTION
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WS_SYSMENU
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WndProcCallback
 import org.jetbrains.skiko.SkiaLayer
 import java.awt.Container
 import java.util.concurrent.ConcurrentHashMap
@@ -107,8 +107,8 @@ import javax.swing.Timer
 class BorderlessWindowHelper(
     private val jFrame: JFrame,
 ) {
-    private val user32 = User32Ex.Companion.INSTANCE
-    private val dwmApi = DwmApi.Companion.INSTANCE
+    private val user32 = User32Ex.INSTANCE
+    private val dwmApi = DwmApi.INSTANCE
 
     private var hwnd: HWND? = null
     private var originalWndProc: Pointer? = null

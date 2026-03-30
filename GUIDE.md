@@ -26,14 +26,15 @@ borderless-titlebar/                    # 库模块（JVM Desktop）
 └── src/jvmMain/kotlin/cn/longzhengyi/windowsdecoration/
     ├── BorderlessTitleBarScaffold.kt    # 脚手架：自动安装 helper + 跟踪最大化状态
     ├── TitleBarScope.kt                # 标题栏作用域（helper、isMaximized、窗口操作）
-    ├── BorderlessWindowHelper.kt       # 核心 Win32 处理
-    ├── BorderlessWindowModifiers.kt    # Modifier 扩展 API + rememberBorderlessWindowHelper
-    ├── skialayer/
-    │   └── SkiaLayerWindowProcedure.kt # SkiaLayer 子类化（NC 鼠标事件转发）
-    ├── win32/
-    │   └── Win32Api.kt                 # Win32 常量/结构体/JNA 接口
-    └── utils/
-        └── GenerateAutoId.kt           # 区域 ID 自动分配
+    └── windowhelper/                   # Win32 无边框窗口实现
+        ├── BorderlessWindowHelper.kt   # 核心 Win32 处理
+        ├── BorderlessWindowModifiers.kt # Modifier 扩展 API + rememberBorderlessWindowHelper
+        ├── skialayer/
+        │   └── SkiaLayerWindowProcedure.kt # SkiaLayer 子类化（NC 鼠标事件转发）
+        ├── win32/
+        │   └── Win32Api.kt             # Win32 常量/结构体/JNA 接口
+        └── utils/
+            └── GenerateAutoId.kt       # 区域 ID 自动分配
 
 sample/                                 # 示例模块
 └── src/jvmMain/kotlin/cn/longzhengyi/windowsdecoration/sample/

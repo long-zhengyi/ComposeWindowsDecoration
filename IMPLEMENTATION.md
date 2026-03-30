@@ -1,8 +1,8 @@
-# TestNoDecoration —— 实现原理说明
+# Borderless TitleBar —— 实现原理说明
 
 ## 一、项目概述
 
-本项目是一个基于 **Compose Multiplatform** 的跨平台桌面应用，核心目标是在 **Windows 平台 (JVM Desktop)** 上实现**无边框自定义标题栏窗口**，同时保留系统原生能力：
+本项目是一个基于 **Compose Multiplatform** 的桌面库，核心目标是在 **Windows 平台 (JVM Desktop)** 上为 Compose 窗口提供**无边框自定义标题栏**，同时保留系统原生能力：
 
 - 窗口阴影与边框
 - Windows 11 圆角
@@ -22,19 +22,25 @@
 ### 项目结构
 
 ```
-composeApp/src/
-├── commonMain/         # 跨平台共享代码（App、Greeting 等）
-├── jvmMain/            # JVM Desktop 平台代码
-│   └── kotlin/org/example/project/
-│       ├── main.kt                     # 程序入口，窗口创建与 Helper 安装
-│       ├── TitleBar.kt                 # 自绘标题栏 Compose 组件
-│       └── win32/
-│           ├── Win32Api.kt             # Win32 常量、结构体、JNA 接口定义
-│           ├── BorderlessWindowHelper.kt   # 核心：JFrame 窗口过程子类化
-│           ├── BorderlessWindowModifiers.kt # Compose Modifier 扩展与一键安装 API
-│           └── SkiaLayerWindowProcedure.kt # SkiaLayer Canvas 窗口过程子类化
-├── androidMain/        # Android 平台代码
-└── iosMain/            # iOS 平台代码
+borderless-titlebar/                    # 库模块（JVM Desktop）
+└── src/jvmMain/kotlin/cn/longzhengyi/windowsdecoration/
+    ├── BorderlessTitleBarScaffold.kt    # 脚手架：自动安装 helper + 跟踪最大化状态
+    ├── TitleBarScope.kt                # 标题栏作用域（helper、isMaximized、窗口操作）
+    └── windowhelper/                   # Win32 无边框窗口实现
+        ├── BorderlessWindowHelper.kt   # 核心：JFrame 窗口过程子类化
+        ├── BorderlessWindowModifiers.kt # Compose Modifier 扩展与一键安装 API
+        ├── skialayer/
+        │   └── SkiaLayerWindowProcedure.kt # SkiaLayer Canvas 窗口过程子类化
+        ├── win32/
+        │   └── Win32Api.kt             # Win32 常量、结构体、JNA 接口定义
+        └── utils/
+            └── GenerateAutoId.kt       # 区域 ID 自动分配
+
+sample/                                 # 示例模块
+└── src/jvmMain/kotlin/cn/longzhengyi/windowsdecoration/sample/
+    ├── Main.kt                         # 入口
+    ├── CustomBorderlessTitleBar.kt     # 基于脚手架的标题栏用例
+    └── SampleApp.kt                    # 示例应用内容
 ```
 
 ---
@@ -66,25 +72,27 @@ Compose Desktop 底层使用 Swing `JFrame` 作为窗口容器，`SkiaLayer`（S
 ## 三、启动流程
 
 ```
-main()
+main()                                  （sample/Main.kt）
   └─ application { Window { ... } }
        ├─ 创建 JFrame + Compose 内容
-       ├─ rememberBorderlessWindowHelper()
-       │     内部通过 LaunchedEffect + SwingUtilities.invokeLater
-       │     创建并安装 BorderlessWindowHelper
        ├─ LaunchedEffect: 设置最小窗口尺寸 (400×300)
-       ├─ LaunchedEffect(helper): 监听 windowState.placement 变化 → 更新 isMaximized
        └─ Column {
-              CustomTitleBar(...)   ← 自绘标题栏，通过 Modifier 上报区域坐标
-              App()                 ← 应用内容
+              CustomBorderlessTitleBar(...)  ← 自绘标题栏
+              │  └─ BorderlessTitleBarScaffold(windowState)
+              │       ├─ rememberBorderlessWindowHelper()
+              │       │     内部通过 LaunchedEffect + SwingUtilities.invokeLater
+              │       │     创建并安装 BorderlessWindowHelper
+              │       ├─ LaunchedEffect(helper): 监听 windowState.placement → 更新 isMaximized
+              │       └─ TitleBarScope.content()  ← 自绘 UI + Modifier 上报区域坐标
+              SampleApp()                   ← 应用内容
           }
 ```
 
 ### 关键步骤详解
 
-1. **`main.kt`** 使用 Compose `Window` API 创建窗口
-2. 调用 `rememberBorderlessWindowHelper()` 一键安装无边框支持（内部通过 `LaunchedEffect` + `SwingUtilities.invokeLater` 在 EDT 线程执行）
-3. `CustomTitleBar` 通过 Modifier 扩展（`windowDragArea`、`windowMinimizeButton`、`windowMaximizeButton`、`windowCloseButton`）在每次布局时将各区域的**精确像素坐标**自动上报给 `BorderlessWindowHelper`
+1. **`sample/Main.kt`** 使用 Compose `Window` API 创建窗口
+2. `CustomBorderlessTitleBar` 内部使用 `BorderlessTitleBarScaffold`，脚手架调用 `rememberBorderlessWindowHelper()` 一键安装无边框支持（内部通过 `LaunchedEffect` + `SwingUtilities.invokeLater` 在 EDT 线程执行）
+3. `TitleBarScope.content()` 中通过 Modifier 扩展（`windowDragArea`、`windowMinimizeButton`、`windowMaximizeButton`、`windowCloseButton`）在每次布局时将各区域的**精确像素坐标**自动上报给 `BorderlessWindowHelper`
 4. `BorderlessWindowHelper` 使用这些坐标进行 Win32 命中测试
 
 ---
@@ -303,12 +311,16 @@ BorderlessWindowHelper 还提供窗口操作方法，供标题栏按钮调用：
 | `restore()` | 还原窗口（`ShowWindow(SW_RESTORE)`） |
 | `toggleMaximize()` | 切换最大化/还原状态 |
 
-在 `main.kt` 中的使用方式：
+在 `TitleBarScope`（脚手架）中的使用方式：
 
 ```kotlin
-onMinimize = { helper?.minimize() },
-onToggleMaximize = { helper?.toggleMaximize() },
-onClose = { exitApplication() },
+// TitleBarScope 提供的便捷方法（内部委托给 helper）
+minimize()
+toggleMaximize()
+
+// 或直接调用 helper
+helper?.minimize()
+helper?.toggleMaximize()
 ```
 
 ---
@@ -378,7 +390,7 @@ private fun lParamToClientHitTest(lParam: LPARAM): Int {
 
 ---
 
-## 六、自绘标题栏 (CustomTitleBar)
+## 六、自绘标题栏 (CustomBorderlessTitleBar)
 
 ### 6.1 布局结构
 
@@ -395,7 +407,7 @@ Row (高度 40dp, 填满宽度)
 坐标上报通过 `BorderlessWindowModifiers.kt` 中的 Modifier 扩展实现，内部调用 `onGloballyPositioned`：
 
 ```kotlin
-// TitleBar.kt 中
+// CustomBorderlessTitleBar.kt 中
 Row(
     modifier = Modifier
         .fillMaxWidth()
@@ -551,7 +563,7 @@ JFrame 层使用 `GetWindowRect` + 减法转换，SkiaLayer 层使用 `ScreenToC
 
 ## 十一、已知限制
 
-1. **仅 Windows 平台**：Win32 API 子类化仅适用于 Windows，Android/iOS 平台不受影响
+1. **仅 Windows 平台**：Win32 API 子类化仅适用于 Windows，其他平台静默降级（保留原生标题栏）
 2. **SkiaLayer 查找依赖延迟**：首次安装时 SkiaLayer 可能未创建，使用 200ms 定时器重试（仅重试一次）
 3. **DWM 圆角仅 Win11**：`DWMWA_WINDOW_CORNER_PREFERENCE` 属性在 Windows 10 及以下版本不可用
 4. **单显示器最大化**：`WM_GETMINMAXINFO` 处理基于当前显示器工作区域，跨显示器场景由系统自动处理

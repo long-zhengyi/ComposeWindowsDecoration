@@ -1,4 +1,4 @@
-package cn.longzhengyi.windowsdecoration
+package cn.longzhengyi.windowsdecoration.windowhelper
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -10,7 +10,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.window.FrameWindowScope
-import cn.longzhengyi.windowsdecoration.utils.generateAutoId
+import cn.longzhengyi.windowsdecoration.windowhelper.utils.generateAutoId
 import java.util.logging.Logger
 import javax.swing.SwingUtilities
 

@@ -1,31 +1,31 @@
-package cn.longzhengyi.windowsdecoration.skialayer
+package cn.longzhengyi.windowsdecoration.windowhelper.skialayer
 
 import com.sun.jna.Callback
 import com.sun.jna.CallbackReference
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.WinDef
-import cn.longzhengyi.windowsdecoration.win32.GWL_WNDPROC
-import cn.longzhengyi.windowsdecoration.win32.HTCLIENT
-import cn.longzhengyi.windowsdecoration.win32.HTCLOSE
-import cn.longzhengyi.windowsdecoration.win32.HTMAXBUTTON
-import cn.longzhengyi.windowsdecoration.win32.HTMINBUTTON
-import cn.longzhengyi.windowsdecoration.win32.HTTRANSPARENT
-import cn.longzhengyi.windowsdecoration.win32.User32Ex
-import cn.longzhengyi.windowsdecoration.win32.WM_LBUTTONDOWN
-import cn.longzhengyi.windowsdecoration.win32.WM_LBUTTONUP
-import cn.longzhengyi.windowsdecoration.win32.WM_MOUSEMOVE
-import cn.longzhengyi.windowsdecoration.win32.WM_NCHITTEST
-import cn.longzhengyi.windowsdecoration.win32.WM_NCLBUTTONDOWN
-import cn.longzhengyi.windowsdecoration.win32.WM_NCLBUTTONUP
-import cn.longzhengyi.windowsdecoration.win32.WM_NCMOUSEMOVE
-import cn.longzhengyi.windowsdecoration.win32.WndProcCallback
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.GWL_WNDPROC
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTCLIENT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTCLOSE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTMAXBUTTON
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTMINBUTTON
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.HTTRANSPARENT
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.User32Ex
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_LBUTTONDOWN
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_LBUTTONUP
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_MOUSEMOVE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCHITTEST
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCLBUTTONDOWN
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCLBUTTONUP
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCMOUSEMOVE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WndProcCallback
 import org.jetbrains.skiko.SkiaLayer
 
 /**
  * SkiaLayer Canvas 窗口过程子类化，使 Compose 按钮在非客户区正常响应。
  *
- * 由 [cn.longzhengyi.windowsdecoration.BorderlessWindowHelper] 内部自动安装，外部无需直接使用。
+ * 由 [cn.longzhengyi.windowsdecoration.windowhelper.BorderlessWindowHelper] 内部自动安装，外部无需直接使用。
  */
 // ─── 实现原理 ───
 // 当鼠标悬停在标题栏按钮区域（HTMAXBUTTON / HTMINBUTTON / HTCLOSE）时，
@@ -39,7 +39,7 @@ class SkiaLayerWindowProcedure(
     skiaLayer: SkiaLayer,
     private val hitTest: (x: Float, y: Float) -> Int,
 ) {
-    private val user32 = User32Ex.Companion.INSTANCE
+    private val user32 = User32Ex.INSTANCE
 
     private val windowHandle = WinDef.HWND(Pointer(skiaLayer.windowHandle))
     internal val contentHandle = WinDef.HWND(Native.getComponentPointer(skiaLayer.canvas))

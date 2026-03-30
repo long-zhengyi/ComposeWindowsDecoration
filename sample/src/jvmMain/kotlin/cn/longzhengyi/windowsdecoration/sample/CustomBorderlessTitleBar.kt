@@ -18,10 +18,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowState
 import cn.longzhengyi.windowsdecoration.BorderlessTitleBarScaffold
-import cn.longzhengyi.windowsdecoration.windowCloseButton
-import cn.longzhengyi.windowsdecoration.windowDragArea
-import cn.longzhengyi.windowsdecoration.windowMaximizeButton
-import cn.longzhengyi.windowsdecoration.windowMinimizeButton
+import cn.longzhengyi.windowsdecoration.windowhelper.windowCloseButton
+import cn.longzhengyi.windowsdecoration.windowhelper.windowDragArea
+import cn.longzhengyi.windowsdecoration.windowhelper.windowMaximizeButton
+import cn.longzhengyi.windowsdecoration.windowhelper.windowMinimizeButton
 
 val TITLE_BAR_HEIGHT = 40.dp
 
