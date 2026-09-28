@@ -46,6 +46,7 @@ const val GWL_STYLE = -16
 
 const val WS_CAPTION = 0x00C00000L
 const val WS_SYSMENU = 0x00080000L
+const val WS_THICKFRAME = 0x00040000L
 
 // SetWindowPos flags
 const val SWP_NOSIZE = 0x0001

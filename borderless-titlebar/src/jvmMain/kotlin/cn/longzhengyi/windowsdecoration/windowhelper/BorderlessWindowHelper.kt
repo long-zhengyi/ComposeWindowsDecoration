@@ -50,6 +50,7 @@ import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_NCMOUSEMOVE
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.WM_SIZE
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.WS_CAPTION
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.WS_SYSMENU
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.WS_THICKFRAME
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.WndProcCallback
 import org.jetbrains.skiko.SkiaLayer
 import java.awt.Container
@@ -98,7 +99,9 @@ import javax.swing.Timer
  * @see windowInteractiveArea
  */
 // ─── 实现原理 ───
-// 1. 保留 WS_CAPTION 窗口样式，通过 DWM 扩展帧实现阴影和边框效果
+// 1. 保留 WS_CAPTION 并补回 WS_THICKFRAME 窗口样式，通过 DWM 扩展帧实现阴影和边框效果。
+//    WS_THICKFRAME 让系统仍把窗口视为"可调整大小"，从而支持原生缩放与 Aero Snap；
+//    undecorated 的 Compose 窗口（WS_POPUP）默认没有该位，必须在此补回。
 // 2. 子类化 JFrame 窗口过程，拦截 WM_NCCALCSIZE（移除默认标题栏）、
 //    WM_NCHITTEST（返回命中测试结果）、WM_GETMINMAXINFO（修正最大化尺寸）等消息
 // 3. 子类化 SkiaLayer 内部 Canvas 窗口过程，将非客户区鼠标事件
@@ -237,9 +240,12 @@ class BorderlessWindowHelper(
         hwnd = HWND(Native.getComponentPointer(jFrame))
         val hWnd = hwnd ?: error("Failed to get HWND")
 
-        // 1. 窗口样式：保留 WS_CAPTION 并移除 WS_SYSMENU（隐藏系统按钮但保留帧）
+        // 1. 保留 WS_CAPTION、补回 WS_THICKFRAME，并移除 WS_SYSMENU（隐藏系统按钮但保留帧）
+        // Compose 的 undecorated = true 走 WS_POPUP，JDK 不会设置该位
+        // （AwtWindow::SetResizable 有 `if (IsUndecorated() == FALSE)` 守卫），
+        // 因此必须在这里补回 WS_THICKFRAME。
         val currentStyle = user32.GetWindowLongPtrW(hWnd, GWL_STYLE)
-        val newStyle = (currentStyle.toLong() or WS_CAPTION) and WS_SYSMENU.inv()
+        val newStyle = (currentStyle.toLong() or WS_CAPTION or WS_THICKFRAME) and WS_SYSMENU.inv()
         user32.SetWindowLongPtrW(hWnd, GWL_STYLE, LONG_PTR(newStyle))
 
         // 2. DWM 扩展帧（启用阴影和边框）
