@@ -53,6 +53,7 @@ import cn.longzhengyi.windowsdecoration.windowhelper.win32.WS_CAPTION
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.WS_SYSMENU
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.WS_THICKFRAME
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.WndProcCallback
+import cn.longzhengyi.windowsdecoration.windowhelper.utils.acquireWndProcOwnership
 import org.jetbrains.skiko.SkiaLayer
 import java.awt.Container
 import java.util.concurrent.ConcurrentHashMap
@@ -240,6 +241,9 @@ class BorderlessWindowHelper(
 
         hwnd = HWND(Native.getComponentPointer(jFrame))
         val hWnd = hwnd ?: error("Failed to get HWND")
+
+        // 0. 登记窗口过程归属，防止与其他子类化实现（如 WindowDragHelper）冲突
+        acquireWndProcOwnership(hWnd, "BorderlessWindowHelper")
 
         // 1. 保留 WS_CAPTION、补回 WS_THICKFRAME，并移除 WS_SYSMENU（隐藏系统按钮但保留帧）
         // Compose 的 undecorated = true 走 WS_POPUP，JDK 不会设置该位

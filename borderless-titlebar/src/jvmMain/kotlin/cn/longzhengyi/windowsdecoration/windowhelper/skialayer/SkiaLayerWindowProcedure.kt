@@ -60,6 +60,19 @@ class SkiaLayerWindowProcedure(
         originalWndProc = user32.SetWindowLongPtrW(contentHandle, GWL_WNDPROC, ptr)
     }
 
+    /**
+     * 还原 Canvas 的原始窗口过程。重复调用安全。
+     *
+     * 仅当本过程仍是 Canvas 当前的窗口过程时才应调用，
+     * 若之后又有其他实现子类化了同一 Canvas，还原会破坏其链路。
+     */
+    fun uninstall() {
+        val original = originalWndProc ?: return
+        user32.SetWindowLongPtrW(contentHandle, GWL_WNDPROC, original)
+        originalWndProc = null
+        callbackRef = null
+    }
+
     private fun handleMessage(hWnd: WinDef.HWND, msg: Int, wParam: WinDef.WPARAM, lParam: WinDef.LPARAM): WinDef.LRESULT {
         when (msg) {
             WM_NCHITTEST -> {
