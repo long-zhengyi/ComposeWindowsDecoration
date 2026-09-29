@@ -401,10 +401,10 @@ class BorderlessWindowHelper(
      * 让这圈边框落到屏幕外。
      *
      * 库本身向系统请求了绘制圆角，
-     * 对普通窗口，DWM 在最大化时会忽略 DWMWCP_ROUND，根本不绘制圆角；
-     * 但对分层窗口（WS_EX_LAYERED，即 Compose 的 transparent = true）它会照办，
+     * 对不透明窗口，DWM 在最大化时会忽略 DWMWCP_ROUND，根本不绘制圆角；
+     * 但对 Compose 的 transparent = true 窗口它会照办，
      * 于是圆角边框被画在外扩后的窗口矩形上，那圈落在屏幕外的部分会出现在相邻显示器上。
-     * 此处显式禁用圆角，补上分层窗口路径缺失的该行为。
+     * 此处显式禁用圆角，补上透明窗口路径缺失的该行为。
      */
     private fun syncCornerPreference(hWnd: HWND, maximized: Boolean) {
         val rounded = !maximized

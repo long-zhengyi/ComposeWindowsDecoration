@@ -296,20 +296,24 @@ WM_GETMINMAXINFO -> {
 `WM_WINDOWPOSCHANGING` 或移除 `WS_THICKFRAME` 改变**。
 
 窗口**内容**不会因此溢出到相邻显示器：系统会将最大化窗口的内容裁剪到所属显示器，
-这一点对普通窗口和分层窗口（`WS_EX_LAYERED`）同样生效。
+这一点对透明和不透明窗口同样生效。
 
 但 **DWM 绘制的圆角边框不是窗口内容**，它画在窗口矩形上，不走那条内容裁剪。而两类窗口在此处的行为不同：
 
 | 窗口类型 | 最大化时请求 `DWMWCP_ROUND` |
 |---|---|
-| 普通窗口（不透明） | DWM **忽略**该请求，不绘制圆角 |
-| 分层窗口（`transparent = true`） | DWM **照办**，绘制圆角边框 |
+| `transparent = false` | DWM **忽略**该请求，不绘制圆角 |
+| `transparent = true` | DWM **照办**，绘制圆角边框 |
 
 因此当 Compose 窗口使用 `transparent = true` 时，圆角边框被画在外扩后的窗口矩形上，
 左/上那 8px 落在屏幕外，会在相邻显示器上显现为一条窄边。
 
-`syncCornerPreference()` 在最大化时设为 `DWMWCP_DONOTROUND`，**即补上分层窗口路径缺失的、
-DWM 已经在对普通窗口做的那条规则**。
+`syncCornerPreference()` 在最大化时设为 `DWMWCP_DONOTROUND`，**即补上透明窗口路径缺失的、
+DWM 已经在对不透明窗口做的那条规则**。
+
+> 上表中两类窗口的行为差异是**实测结论**：把最大化矩形四边各内缩 100px 使窗口完全位于
+> 显示器内部（从而排除跨屏裁剪的干扰），再强制 `DWMWCP_ROUND` 观察四角 —— 不透明为直角、
+> 透明为圆角。另需注意，「透明模式是否等于 `WS_EX_LAYERED`」未经验证，故此处不作该表述。
 
 #### WM_NCMOUSEMOVE —— 非客户区鼠标移动转发
 
