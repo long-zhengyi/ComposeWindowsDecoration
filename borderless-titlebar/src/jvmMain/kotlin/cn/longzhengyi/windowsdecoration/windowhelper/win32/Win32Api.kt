@@ -59,6 +59,7 @@ const val SWP_FRAMECHANGED = 0x0020
 const val DWMWA_WINDOW_CORNER_PREFERENCE = 33
 
 // DWM 圆角偏好
+const val DWMWCP_DONOTROUND = 1
 const val DWMWCP_ROUND = 2
 
 // SW_ Show Window 命令

@@ -6,6 +6,7 @@ import com.sun.jna.platform.win32.BaseTSD.LONG_PTR
 import com.sun.jna.platform.win32.WinDef.*
 import cn.longzhengyi.windowsdecoration.windowhelper.skialayer.SkiaLayerWindowProcedure
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.DWMWA_WINDOW_CORNER_PREFERENCE
+import cn.longzhengyi.windowsdecoration.windowhelper.win32.DWMWCP_DONOTROUND
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.DWMWCP_ROUND
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.DwmApi
 import cn.longzhengyi.windowsdecoration.windowhelper.win32.GWL_STYLE
@@ -272,10 +273,7 @@ class BorderlessWindowHelper(
         )
 
         // 5. Win11 圆角
-        try {
-            val cornerPref = Memory(4).apply { setInt(0, DWMWCP_ROUND) }
-            dwmApi.DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, cornerPref, 4)
-        } catch (_: Exception) { }
+        syncCornerPreference(hWnd, user32.IsZoomed(hWnd))
 
         // 6. 子类化 SkiaLayer（延迟重试，因为 Compose 首次渲染可能还未完成）
         tryInstallSkiaLayerProcedure()
@@ -394,6 +392,32 @@ class BorderlessWindowHelper(
     // Win32 消息处理
     // ═══════════════════════════════════════════════════
 
+    private var roundedCorners: Boolean? = null
+
+    /**
+     * 让 Win11 圆角偏好跟随最大化状态：最大化时禁用圆角。
+     *
+     * 最大化时系统会将窗口矩形按帧边框厚度向外扩张一圈（例如左/上变为 -8），
+     * 让这圈边框落到屏幕外。
+     *
+     * 库本身向系统请求了绘制圆角，
+     * 对普通窗口，DWM 在最大化时会忽略 DWMWCP_ROUND，根本不绘制圆角；
+     * 但对分层窗口（WS_EX_LAYERED，即 Compose 的 transparent = true）它会照办，
+     * 于是圆角边框被画在外扩后的窗口矩形上，那圈落在屏幕外的部分会出现在相邻显示器上。
+     * 此处显式禁用圆角，补上分层窗口路径缺失的该行为。
+     */
+    private fun syncCornerPreference(hWnd: HWND, maximized: Boolean) {
+        val rounded = !maximized
+        if (roundedCorners == rounded) return
+        roundedCorners = rounded
+        try {
+            val pref = Memory(4).apply {
+                setInt(0, if (rounded) DWMWCP_ROUND else DWMWCP_DONOTROUND)
+            }
+            dwmApi.DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, pref, 4)
+        } catch (_: Exception) { }
+    }
+
     private fun handleMessage(hWnd: HWND, msg: Int, wParam: WPARAM, lParam: LPARAM): LRESULT {
         when (msg) {
             WM_NCCALCSIZE -> {
@@ -432,6 +456,7 @@ class BorderlessWindowHelper(
                 val h = (lParam.toInt() shr 16) and 0xFFFF
                 windowWidth = w
                 windowHeight = h
+                syncCornerPreference(hWnd, user32.IsZoomed(hWnd))
                 return user32.CallWindowProcW(originalWndProc!!, hWnd, msg, wParam, lParam)
             }
 

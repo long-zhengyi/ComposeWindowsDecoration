@@ -16,8 +16,8 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Borderless TitleBar Sample",
         state = windowState,
-//        undecorated = true,
-//        transparent = true,
+        undecorated = true,
+        transparent = true,
     ) {
         // 设置最小窗口尺寸
         LaunchedEffect(Unit) {

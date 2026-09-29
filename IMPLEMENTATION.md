@@ -114,10 +114,13 @@ BorderlessWindowHelper 采用 **“背板 + 镂空”** 命中测试模型：
 #### 步骤 1：修改窗口样式
 
 ```kotlin
-val newStyle = (currentStyle.toLong() or WS_CAPTION) and WS_SYSMENU.inv()
+val newStyle = (currentStyle.toLong() or WS_CAPTION or WS_THICKFRAME) and WS_SYSMENU.inv()
 ```
 
 - **保留 `WS_CAPTION`**：使 DWM 为窗口绘制阴影和边框
+- **补回 `WS_THICKFRAME`**：让系统仍把窗口视为“可调整大小”，从而支持原生缩放与 Aero Snap。
+  Compose 的 `undecorated = true` 走 `WS_POPUP`，JDK 不会设置该位
+  （`AwtWindow::SetResizable` 有 `if (IsUndecorated() == FALSE)` 守卫），必须在此补回
 - **移除 `WS_SYSMENU`**：隐藏系统菜单按钮（最小化/最大化/关闭），因为我们会自己绘制
 
 #### 步骤 2：DWM 扩展帧
@@ -155,11 +158,19 @@ user32.SetWindowPos(hWnd, null, 0, 0, 0, 0,
 #### 步骤 5：Windows 11 圆角
 
 ```kotlin
-val cornerPref = Memory(4).apply { setInt(0, DWMWCP_ROUND) }
-dwmApi.DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, cornerPref, 4)
+syncCornerPreference(hWnd, user32.IsZoomed(hWnd))
 ```
 
-设置 DWM 窗口属性 `DWMWA_WINDOW_CORNER_PREFERENCE = 33`，请求圆角样式。此 API 仅 Windows 11 (Build 22000+) 支持，较早版本会静默失败。
+设置 DWM 窗口属性 `DWMWA_WINDOW_CORNER_PREFERENCE = 33`。此 API 仅 Windows 11 (Build 22000+) 支持，较早版本会静默失败。
+
+圆角偏好**不是一次性设定**，而是随最大化状态动态切换（详见 [4.2 圆角偏好与多显示器溢出](#圆角偏好与多显示器溢出)）：
+
+| 窗口状态 | 圆角偏好 |
+|---|---|
+| 还原 | `DWMWCP_ROUND` |
+| 最大化 | `DWMWCP_DONOTROUND` |
+
+`install()` 和 `WM_SIZE` 两处都会调用 `syncCornerPreference()`，内部用 `roundedCorners` 缓存避免重复设置。
 
 #### 步骤 6：子类化 SkiaLayer
 
@@ -276,7 +287,29 @@ WM_GETMINMAXINFO -> {
 
 #### WM_SIZE —— 窗口尺寸变化
 
-缓存窗口宽高，并转发给原始窗口过程。
+缓存窗口宽高，调用 `syncCornerPreference()` 同步圆角偏好，并转发给原始窗口过程。
+
+#### 圆角偏好与多显示器溢出
+
+最大化时系统会将窗口矩形按帧边框厚度向外扩张一圈（96 DPI 下为 8px，即 `(0,0,1920,1032)` → `(-8,-8,1928,1040)`），
+设计意图是让这圈 sizing border 落到屏幕外。**这是系统既定行为，无法通过 `WM_GETMINMAXINFO`、
+`WM_WINDOWPOSCHANGING` 或移除 `WS_THICKFRAME` 改变**。
+
+窗口**内容**不会因此溢出到相邻显示器：系统会将最大化窗口的内容裁剪到所属显示器，
+这一点对普通窗口和分层窗口（`WS_EX_LAYERED`）同样生效。
+
+但 **DWM 绘制的圆角边框不是窗口内容**，它画在窗口矩形上，不走那条内容裁剪。而两类窗口在此处的行为不同：
+
+| 窗口类型 | 最大化时请求 `DWMWCP_ROUND` |
+|---|---|
+| 普通窗口（不透明） | DWM **忽略**该请求，不绘制圆角 |
+| 分层窗口（`transparent = true`） | DWM **照办**，绘制圆角边框 |
+
+因此当 Compose 窗口使用 `transparent = true` 时，圆角边框被画在外扩后的窗口矩形上，
+左/上那 8px 落在屏幕外，会在相邻显示器上显现为一条窄边。
+
+`syncCornerPreference()` 在最大化时设为 `DWMWCP_DONOTROUND`，**即补上分层窗口路径缺失的、
+DWM 已经在对普通窗口做的那条规则**。
 
 #### WM_NCMOUSEMOVE —— 非客户区鼠标移动转发
 
@@ -567,3 +600,4 @@ JFrame 层使用 `GetWindowRect` + 减法转换，SkiaLayer 层使用 `ScreenToC
 2. **SkiaLayer 查找依赖延迟**：首次安装时 SkiaLayer 可能未创建，使用 200ms 定时器重试（仅重试一次）
 3. **DWM 圆角仅 Win11**：`DWMWA_WINDOW_CORNER_PREFERENCE` 属性在 Windows 10 及以下版本不可用
 4. **单显示器最大化**：`WM_GETMINMAXINFO` 处理基于当前显示器工作区域，跨显示器场景由系统自动处理
+5. **最大化时无圆角**：为避免圆角边框溢出到相邻显示器，最大化状态下主动禁用圆角（与 Windows 原生窗口行为一致）
